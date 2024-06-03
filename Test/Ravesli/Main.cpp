@@ -2,7 +2,620 @@
 #define DEBUG
 
 #ifdef DEBUG
-  int main1() {} 
+#include <iostream>
+#include <bitset>
+int main1() {
+
+    float i = 90;
+    i = i / 3.6;
+    std::cout << i << "\n";
+    return 0;
+}
+#endif
+
+#ifdef ПользовательскийВвод2
+#include <iostream>
+#include <limits>
+#include <conio.h>
+#include <algorithm>
+
+int main1() {
+    while (true) {
+        char current_char;
+        bool is_negative = false;
+        bool has_decimal = false;
+        double number = 0;
+        int decimal_place = 0;
+        std::string input = ""; // Строка для хранения введенных символов
+
+        std::cout << "Введите число: ";
+
+        while (true) {
+            current_char = _getch();
+
+            if (current_char == '\r') { // Enter - завершение ввода
+                break;
+            }
+            else if (current_char == '\b' && !input.empty()) { // Backspace - удаление последнего символа
+                std::cout << "\b \b"; // Удаление последнего символа на экране
+                input.pop_back(); // Удаление последнего символа из строки
+                if (input.back() == '.') { // Если удаляется точка, то сбрасываем флаг has_decimal
+                    has_decimal = false;
+                }
+            }
+            else if (current_char == '-' && !is_negative && !has_decimal && number == 0) {
+                is_negative = true;
+                std::cout << current_char;
+                input += current_char;
+            }
+            else if (current_char >= '0' && current_char <= '9') {
+                number = number * 10 + (current_char - '0');
+                std::cout << current_char;
+                input += current_char;
+            }
+            else if (current_char == '.' && !has_decimal) {
+                has_decimal = true;
+                std::cout << current_char;
+                input += current_char;
+            }
+            else { // Недопустимый символ - подаем звуковой сигнал
+                std::cout << "\a"; // Звуковой сигнал
+            }
+        }
+        std::cout << std::endl;
+        // Проверка на очень большие и очень маленькие числа
+        if (input.length() > 10 || (input.length() == 10 && (input[0] == '1' || (input[0] == '-' && input[1] == '1')))) {
+            std::cout << "Ошибка: число слишком большое!" << std::endl;
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Очистка буфера ввода
+            continue; // Переходим к следующему вводу
+        }
+
+        if (has_decimal) {
+            number = atof(input.c_str()); // Преобразуем строку в число с плавающей точкой
+        }
+        else {
+            number = atoi(input.c_str()); // Преобразуем строку в целое число
+        }
+
+        if (is_negative) {
+            number *= -1;
+        }
+
+        // Проверка на очень маленькие числа
+        if (number > -1e-10 && number < 1e-10) {
+            std::cout << "Ошибка: число слишком маленькое!" << std::endl;
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Очистка буфера ввода
+            continue; // Переходим к следующему вводу
+        }
+
+        std::cout << "Число: " << number << std::endl;
+        break; // Выход из цикла, если число успешно введено
+    }
+
+    return 0;
+}
+
+
+
+#endif
+
+#ifdef ПользовательскийВвод1
+#include <iostream>
+#include <string>
+#include <regex>
+
+bool is_valid_char(char c) {
+    // Проверяем, является ли символ допустимым
+    return (c >= '0' && c <= '9') || c == '-' || c == '.';
+}
+
+int main1() {
+    std::string input;
+    char current_char;
+
+    std::cout << "Введите число: ";
+
+    while (std::cin.get(current_char)) {
+        if (is_valid_char(current_char)) {
+            input += current_char; // Добавляем символ к строке
+            std::cout << current_char; // Выводим символ на экран
+        }
+        // Если ввод - Enter, выходим из цикла
+        if (current_char == '\n') {
+            break;
+        }
+    }
+    // Преобразуем строку в число (только если она не пуста)
+    if (!input.empty()) {
+        double number = std::stod(input);
+
+        // Проверяем на очень большие и очень маленькие числа:
+        if (number > 1e10 || number < -1e10) {
+            std::cout << "Ошибка: число слишком большое!" << std::endl;
+        }
+        else if (number > -1e-10 && number < 1e-10) {
+            std::cout << "Ошибка: число слишком маленькое!" << std::endl;
+        }
+        else {
+            std::cout << "Число: " << number << std::endl;
+        }
+    }
+    else {
+        std::cout << "Ошибка: ввод пуст!" << std::endl;
+    }
+
+    return 0;
+}
+
+#endif
+
+#ifdef ПользовательскийВвод
+#include <iostream>
+
+double getValue()
+{
+    while (true) // цикл продолжается до тех пор, пока пользователь не введет корректное значение
+    {
+        std::cout << "Enter a double value: ";
+        double a;
+        std::cin >> a;
+
+        // Проверка на предыдущее извлечение
+        if (std::cin.fail()) // если предыдущее извлечение оказалось неудачным,
+        {
+            std::cin.clear(); // то возвращаем cin в 'обычный' режим работы
+            std::cin.ignore(32767, '\n'); // и удаляем значения предыдущего ввода из входного буфера
+            std::cout << "Oops, that input is invalid.  Please try again.\n";
+        }
+        else
+        {
+            std::cin.ignore(32767, '\n'); // удаляем лишние значения
+
+            return a;
+        }
+    }
+}
+
+char getOperator()
+{
+    while (true) // цикл продолжается до тех пор, пока пользователь не введет корректное значение
+    {
+        std::cout << "Enter one of the following: +, -, *, or /: ";
+        char sm;
+        std::cin >> sm;
+
+        // Переменные типа char могут принимать любые символы из пользовательского ввода, поэтому нам не стоит беспокоиться по поводу возникновения неудачного извлечения
+
+        std::cin.ignore(32767, '\n'); // удаляем лишний балласт
+
+        // Выполняем проверку пользовательского ввода
+        if (sm == '+' || sm == '-' || sm == '*' || sm == '/')
+            return sm; // возвращаем обратно в caller
+        else // в противном случае, сообщаем пользователю что что-то пошло не так
+            std::cout << "Oops, that input is invalid.  Please try again.\n";
+    }
+}
+
+void printResult(double a, char sm, double b)
+{
+    if (sm == '+')
+        std::cout << a << " + " << b << " is " << a + b << '\n';
+    else if (sm == '-')
+        std::cout << a << " - " << b << " is " << a - b << '\n';
+    else if (sm == '*')
+        std::cout << a << " * " << b << " is " << a * b << '\n';
+    else if (sm == '/')
+        std::cout << a << " / " << b << " is " << a / b << '\n';
+    else
+        std::cout << "Something went wrong: printResult() got an invalid operator.";
+
+}
+
+int main1()
+{
+    double a = getValue();
+    char sm = getOperator();
+    double b = getValue();
+
+    printResult(a, sm, b);
+
+    return 0;
+}
+#endif
+
+#ifdef ВихрьМерсенна генерация случайных чисел
+#include <iostream>
+// #include <ctime> // раскомментируйте, если используете Code::Blocks
+#include <random> // для std::random_device и std::mt19937
+
+int main1()
+{
+    std::random_device rd;
+    std::mt19937 mersenne(rd()); // инициализируем Вихрь Мерсенна случайным стартовым числом 
+
+// Примечание: Из-за одного бага в компиляторе Code::Blocks (если вы используете Code::Blocks в Windows) - удалите две строки кода выше и раскомментируйте следующую строку:
+// std::mt19937 mersenne(static_cast<unsigned int>(time(0))); // инициализируем Вихрь Мерсенна случайным стартовым числом
+
+    // Выводим несколько случайных чисел
+    for (int count = 0; count < 48; ++count)
+    {
+        std::cout << mersenne() << "\t";
+
+        // Если вывели 5 чисел, то вставляем символ новой строки
+        if ((count + 1) % 5 == 0)
+            std::cout << "\n";
+    }
+    return 0;
+}
+#endif
+
+#ifdef ГПСЧ генератор псевдослучайных чисел
+#include <iostream>
+#include <cstdlib> // для функций rand() и srand()
+#include <ctime> // для функции time()
+
+unsigned int PRNG()
+{
+    // Наше стартовое число - 4 541
+    static unsigned int seed = 4541;
+    // Берем стартовое число и, с его помощью, генерируем новое значение.
+    // Из-за использования очень больших чисел (и переполнения) угадать следующее число исходя из предыдущего - очень сложно
+    seed = (8253729 * seed + 2396403);
+    // Берем стартовое число и возвращаем значение в диапазоне от 0 до 32767
+    return seed % 32768;
+}
+int main1()
+{
+    // Выводим 100 случайных чисел
+    for (int count = 0; count < 100; ++count)
+    {
+        std::cout << PRNG() << "\t";
+        // Если вывели 5 чисел, то вставляем символ новой строки
+        if ((count + 1) % 5 == 0)
+            std::cout << "\n";
+    }
+    std::cout << std::endl;
+    srand(static_cast<unsigned int>(time(0))); // устанавливаем значение системных часов в качестве стартового числа
+
+    for (int count = 0; count < 100; ++count)
+    {
+        std::cout << rand() << "\t";
+
+        // Если вывели 5 чисел, то вставляем символ новой строки
+        if ((count + 1) % 5 == 0)
+            std::cout << "\n";
+    }
+    return 0;
+}
+#endif
+
+#ifdef Switch_Case
+#include <iostream>
+
+bool isDigit(char p)
+{
+    switch (p)
+    {
+    case '0': // если p = 0
+    case '1': // если p = 1
+    case '2': // если p = 2
+    case '3': // если p = 3
+    case '4': // если p = 4
+    case '5': // если p = 5
+    case '6': // если p = 6
+    case '7': // если p = 7
+    case '8': // если p = 8
+    case '9': // если p = 9
+        return true; // возвращаем true
+    default: // в противном случае, возвращаем false
+        return false;
+    }
+}
+int calculate(int x, int y, char op)
+{
+    switch (op)
+    {
+    case '+':
+        return x + y;
+    case '-':
+        return x - y;
+    case '*':
+        return x * y;
+    case '/':
+        return x / y;
+    case '%':
+        return x % y;
+    default:
+        std::cout << "calculate(): Unhandled case\n";
+        return 0;
+    }
+}
+
+int main1()
+{
+    std::cout << "Enter an integer: ";
+    int x;
+    std::cin >> x;
+
+    std::cout << "Enter another integer: ";
+    int y;
+    std::cin >> y;
+
+    std::cout << "Enter a mathematical operator (+, -, *, /, or %): ";
+    char op;
+    std::cin >> op;
+
+    std::cout << x << " " << op << " " << y << " is " << calculate(x, y, op) << "\n";
+
+    return 0;
+}
+
+#endif
+
+#ifdef auto_
+auto d = 4.0;
+auto subtract(int, int) -> int;
+int subtract(int a, int b)
+{
+    return a - b;
+}
+auto divide(double a, double b) -> double;
+auto printThis() -> void;
+auto calculateResult(int a, double x)->std::string;
+#endif
+
+#ifdef Структуры
+#include <iostream>
+
+struct Employee
+{
+    short id;
+    int age;
+    double salary;
+};
+
+void printInformation(Employee employee)
+{
+    std::cout << "ID: " << employee.id << "\n";
+    std::cout << "Age: " << employee.age << "\n";
+    std::cout << "Salary: " << employee.salary << "\n";
+}
+
+int main1()
+{
+    Employee john = { 21, 27, 28.45 };
+    Employee james = { 22, 29, 19.29 };
+
+    // Выводим информацию о John
+    printInformation(john);
+
+    std::cout << "\n";
+
+    // Выводим информацию о James
+    printInformation(james);
+    std::cout << sizeof(james);
+    return 0;
+}
+#endif
+
+#ifdef typedef_using
+//Следующий typedef:
+typedef double time_t; // используем time_t в качестве псевдонима для типа double
+
+//В С++11 можно объявить как :
+using time_t = double; // используем time_t в качестве псевдонима для типа double
+
+//Эти два способа функционально эквивалентны.
+#endif
+
+#ifdef enum_class
+#include <iostream>
+
+int main1()
+{
+    enum class Fruits // добавление "class" к enum определяет перечисление с ограниченной областью видимости, вместо стандартного "глобального" перечисления 
+    {
+        LEMON, // LEMON находится внутри той же области видимости, что и Fruits
+        KIWI
+    };
+
+    enum class Colors
+    {
+        PINK, // PINK находится внутри той же области видимости, что и Colors
+        GRAY
+    };
+
+    Fruits fruit = Fruits::LEMON; // примечание: LEMON напрямую не доступен, мы должны использовать Fruits::LEMON
+    Colors color = Colors::PINK; // примечание: PINK напрямую не доступен, мы должны использовать Colors::PINK
+
+    //if (fruit == color) // ошибка компиляции, поскольку компилятор не знает, как сравнивать разные типы: Fruits и Colors
+    if (static_cast<int>(fruit) == static_cast<int>(color))
+        std::cout << "fruit and color are equal\n";
+    else
+        std::cout << "fruit and color are not equal\n";
+
+    return 0;
+}
+#endif
+
+#ifdef enums 
+#include <iostream>
+#include <bitset>
+#include <iostream>
+
+enum Colors
+{
+    COLOR_PURPLE, // присваивается 0
+    COLOR_GRAY,   // присваивается 1
+    COLOR_BLUE,   // присваивается 2
+    COLOR_GREEN,  // присваивается 3
+    COLOR_BROWN,  // присваивается 4
+    COLOR_PINK,   // присваивается 5
+    COLOR_YELLOW, // присваивается 6
+    COLOR_MAGENTA // присваивается 7
+};
+void printColor(Colors color)
+{
+    if (color == COLOR_PURPLE)
+        std::cout << "Purple";
+    else if (color == COLOR_GRAY)
+        std::cout << "Gray";
+    else if (color == COLOR_BLUE)
+        std::cout << "Blue";
+    else if (color == COLOR_GREEN)
+        std::cout << "Green";
+    else if (color == COLOR_BROWN)
+        std::cout << "Brown";
+    else if (color == COLOR_PINK)
+        std::cout << "Pink";
+    else if (color == COLOR_YELLOW)
+        std::cout << "Yellow";
+    else if (color == COLOR_MAGENTA)
+        std::cout << "Magenta";
+    else
+        std::cout << "Who knows!";
+}
+int main1()
+{
+    //Colors color;
+    //std::cin >> color; // приведет к ошибке компиляции
+    int inputColor;
+    std::cin >> inputColor;
+    Colors color = static_cast<Colors>(inputColor);
+    printColor(color);
+    return 0;
+}
+#endif
+
+#ifdef String строки
+#include <iostream>
+#include <string>
+
+int main1()
+{
+    //При вводе числовых значений не забывайте удалять символ новой строки 
+    //из входного потока данных с помощью std::cin.ignore().
+    std::cout << "Pick 1 or 2: ";
+    int choice;
+    std::cin >> choice;
+
+    std::cin.ignore(32767, '\n'); // удаляем символ новой строки из входного потока данных
+
+    std::cout << "Now enter your name: ";
+    std::string myName;
+    std::getline(std::cin, myName);
+
+    std::cout << "Hello, " << myName << ", you picked " << choice << '\n';
+
+    std::cout << myName << " has " << myName.length() << " characters\n";
+
+    return 0;
+}
+#endif
+
+#ifdef Явное_Приведение
+int main1() {
+    int i = 90;
+    i = (int)(i / 3.6); //C-style избегаем, не проверяется компилятором
+    i = static_cast<int>(i / 3.6);
+    return 0;
+}
+#endif
+
+#ifdef using_ объявления
+#include <iostream>
+
+int main1()
+{
+    using std::cout; // "using-объявление" сообщает компилятору, что cout следует обрабатывать, как std::cout
+    cout << "Hello, world!"; // и никакого префикса std:: уже здесь не нужно!
+    return 0;
+}
+#endif
+
+#ifdef Foo_BooDoo Псевдонимы для пространств имен
+#include <iostream>
+
+namespace Boo
+{
+    namespace Doo
+    {
+        const int g_x = 7;
+    }
+}
+
+namespace Foo = Boo::Doo; // Foo теперь считается как Boo::Doo
+
+int main1()
+{
+    std::cout << Foo::g_x; // это, на самом деле, Boo::Doo::g_x
+    return 0;
+}
+#endif
+
+#ifdef BooDoo конфликтов имен (пространства имен)
+namespace Boo
+{
+    // Эта версия doOperation() принадлежит пространству имен Boo
+    constexpr int doOperation(int a, int b) noexcept
+    {
+        return a + b;
+    }
+}
+namespace Doo
+{
+    // Эта версия doOperation() принадлежит пространству имен Doo
+    constexpr int doOperation(int a, int b) noexcept
+    {
+        return a - b;
+    }
+}
+int main1(void)
+{
+    std::cout << Boo::doOperation(5, 4) << '\n';
+    std::cout << Doo::doOperation(5, 4) << '\n';
+    return 0;
+}
+#endif //
+
+#ifdef s_ Статическая продолжительность жизни
+int generateID()
+{
+    static int s_itemID = 0;
+    return s_itemID++;
+}
+//выходя из области видимости, s_itemID не уничтожается
+//но
+//добавляя static к переменной, объявленной вне блока, мы определяем её как внутреннюю, 
+//то есть такую, которую можно использовать только в файле, в котором она определена
+#endif //
+
+#ifdef g_ глобальные переменные – зло
+double g_gravity(9.8); // можно экспортировать и использовать напрямую в любом файле
+//Сделайте следующее :
+static double g_gravity(9.8); // ограничиваем доступ к переменной только на этот файл
+double getGravity() // эта функция может быть экспортирована в другие файлы для доступа к глобальной переменной
+{
+    return g_gravity;
+}
+//В - третьих, при написании автономной функции, использующей глобальные переменные, 
+// не используйте их непосредственно в теле функции.Передавайте их в качестве параметров.
+// Таким образом, если в вашей функции нужно будет когда - либо использовать другое значение, 
+// то вы сможете просто изменить параметр.Это улучшит модульность вашей программы. 
+//    Вместо следующего :
+// Эта функция полезна только для расчета мгновенной скорости на основе глобальной гравитации
+double instantVelocity(int time)
+{
+    return g_gravity * time;
+}
+//Сделайте следующее :
+// Эта функция вычисляет мгновенную скорость для любого значения гравитации.
+// Передайте возвращаемое значение из getGravity() в параметр gravity, 
+// если хотите использовать глобальную переменную gravity
+double instantVelocity(int time, double gravity)
+{
+    return gravity * time;
+}
 #endif //
 
 #ifdef bitset
@@ -101,22 +714,22 @@ int main1()
 #endif // 
 
 #ifdef ЧислоЧетное?
-  bool isEven(int aDec)
-  {
-      return !(aDec & 0x1);
-  }
+bool isEven(int aDec)
+{
+    return !(aDec & 0x1);
+}
 #endif // ЧислоЧетное?
 
 #ifdef static_cast_Example
-  void static_cast_Example()
-  {
+void static_cast_Example()
+{
     int x = 7;
     int y = 4;
     std::cout << "int / int = " << x / y << "\n";
     std::cout << "double / int = " << static_cast<double>(x) / y << "\n";
     std::cout << "int / double = " << x / static_cast<double>(y) << "\n";
     std::cout << "double / double = " << static_cast<double>(x) / static_cast<double>(y) << "\n";
-  }
+}
 #endif // static_cast_Example
 
 #ifdef Степень_int
