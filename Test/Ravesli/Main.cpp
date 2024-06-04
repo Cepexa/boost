@@ -5,10 +5,320 @@
 #include <iostream>
 #include <bitset>
 int main1() {
-
+    int array[]{ 4, 5, 8, 9, 12 };
     float i = 90;
     i = i / 3.6;
     std::cout << i << "\n";
+    return 0;
+}
+#endif
+
+#ifdef C_style
+#include <iostream>
+
+int main1() {
+    char ch[] = "R";
+    std::cout << ch << std::endl;
+    std::cout << static_cast<void*>(ch) << std::endl;
+    std::cout << &ch;
+    return 0;
+}
+#endif
+
+#ifdef Арфиметика указателей
+#include <iostream>
+
+int main1()
+{
+    const int arrayLength = 10;
+    char name[arrayLength] = "Jonathanu";
+    int numVowels(0);
+    for (char* ptr = name; ptr < name + arrayLength; ++ptr)
+    {
+        switch (*ptr)
+        {
+        case 'A':
+        case 'a':
+        case 'E':
+        case 'e':
+        case 'I':
+        case 'i':
+        case 'O':
+        case 'o':
+        case 'U':
+        case 'u':
+            ++numVowels;
+        }
+    }
+
+    std::cout << name << " has " << numVowels << " vowels.\n";
+
+    return 0;
+}
+#endif
+
+#ifdef nullptr_
+#include <iostream>
+
+void doAnything(int* ptr)
+{
+    if (ptr)
+        std::cout << "You passed in " << *ptr << '\n';
+    else
+        std::cout << "You passed in a null pointer\n";
+}
+void doAnything1(std::nullptr_t ptr)
+{
+    std::cout << "in doAnything()\n";
+}
+int main1()
+{
+    doAnything(nullptr); // теперь аргумент является точно нулевым указателем, а не целочисленным значением
+    doAnything1(nullptr); // теперь аргумент является точно нулевым указателем, а не целочисленным значением
+
+    return 0;
+}
+#endif
+
+#ifdef указатели
+#include <iostream>
+#include <bitset>
+int main1() {
+    short value = 7; // &value = 0012FF60
+    short otherValue = 3; // &otherValue = 0012FF54
+
+    short* ptr = &value;
+
+    std::cout << &value << '\n';
+    std::cout << value << '\n';
+    std::cout << ptr << '\n';
+    std::cout << *ptr << '\n';
+    std::cout << '\n';
+
+    *ptr = 9;
+
+    std::cout << &value << '\n';
+    std::cout << value << '\n';
+    std::cout << ptr << '\n';
+    std::cout << *ptr << '\n';
+    std::cout << '\n';
+
+    ptr = &otherValue;
+
+    std::cout << &otherValue << '\n';
+    std::cout << otherValue << '\n';
+    std::cout << ptr << '\n';
+    std::cout << *ptr << '\n';
+    std::cout << '\n';
+
+    std::cout << sizeof(ptr) << '\n';
+    std::cout << sizeof(*ptr) << '\n';    
+    return 0;
+}
+#endif
+
+#ifdef cstring
+#include <iostream>
+#include <cstring>
+
+int main1()
+{
+    char text[] = "Print this!";
+    char dest[50]; // обратите внимание, длина массива dest всего 5 символов!
+    strcpy_s(dest, text); // переполнение если 5!
+    std::cout << dest<< std::endl;
+
+    char name[15] = "Max"; // используется только 4 символа (3 буквы + нуль-терминатор)
+    std::cout << "My name is " << name << '\n';
+    std::cout << name << " has " << strlen(name) << " letters.\n";
+    std::cout << name << " has " << sizeof(name) << " characters in the array.\n";
+
+    // Просим пользователя ввести строку
+    char buffer[255];
+    std::cout << "Enter a string: ";
+    std::cin.getline(buffer, 255);
+
+    int spacesFound = 0;
+    // Перебираем каждый символ, который ввел пользователь
+    for (int index = 0; index < strlen(buffer); ++index)
+    {
+        // Подсчитываем количество пробелов
+        if (buffer[index] == ' ')
+            spacesFound++;
+    }
+
+    std::cout << "You typed " << spacesFound << " spaces!\n";
+    
+    //функция strcat() — добавляет одну строку к другой(опасно);
+
+    //функция strncat() — добавляет одну строку к другой(с проверкой размера места назначения);
+
+    //функция strcmp() — сравнивает две строки(возвращает 0, если они равны);
+
+    //функция strncmp() — сравнивает две строки до определенного количества символов(возвращает 0, если до указанного символа не было различий).
+    
+    return 0;
+}
+#endif
+
+#ifdef двумерныйМассив табл. умножения
+#include <iostream>
+
+int main1()
+{
+    // Объявляем массив 10x10 
+    const int numRows = 10;
+    const int numCols = 10;
+    int product[numRows][numCols] = { 0 };
+
+    // Создаем таблицу умножения
+    for (int row = 0; row < numRows; ++row)
+        for (int col = 0; col < numCols; ++col)
+            product[row][col] = row * col;
+
+    // Выводим таблицу умножения
+    for (int row = 1; row < numRows; ++row)
+    {
+        for (int col = 1; col < numCols; ++col)
+            std::cout << product[row][col] << "\t";
+        std::cout << '\n';
+    }
+    return 0;
+}
+#endif
+
+#ifdef Пузырьком сортировка
+#include <iostream> 
+#include <algorithm> // для std::swap. В C++11 используйте заголовок <utility>
+
+int main()
+{
+    const int length(9);
+    int array[length] = { 7, 5, 6, 4, 9, 8, 2, 1, 3 };
+
+    for (int iteration = 0; iteration < length - 1; ++iteration)
+    {
+        // Помните о том, что последний элемент будет отсортирован и в каждой последующей итерации цикла,
+        // поэтому наша сортировка «заканчивается» на один элемент раньше
+        int endOfArrayIndex(length - iteration);
+
+        bool swapped(false); // отслеживаем, были ли выполнены замены в этой итерации
+
+        // Перебираем каждый элемент массива до последнего (не включительно).
+        // Последний элемент не имеет пары для сравнения
+        for (int currentIndex = 0; currentIndex < endOfArrayIndex - 1; ++currentIndex)
+        {
+            // Если текущий элемент больше элемента, следующего за ним,
+            if (array[currentIndex] > array[currentIndex + 1])
+            {
+                // то выполняем замену
+                std::swap(array[currentIndex], array[currentIndex + 1]);
+                swapped = true;
+            }
+        }
+
+        // Если в этой итерации не выполнилось ни одной замены, то цикл можно завершать
+        if (!swapped)
+        {
+            // Выполнение начинается с 0-й итерации, но мы привыкли считать, начиная с 1, поэтому для подсчета количества итераций добавляем единицу
+            std::cout << "Early termination on iteration: " << iteration + 1 << '\n';
+            break;
+        }
+    }
+
+    // Выводим отсортированный массив на экран
+    for (int index = 0; index < length; ++index)
+        std::cout << array[index] << ' ';
+
+    return 0;
+}
+#endif
+
+#ifdef Сортировка массивов методом выбора
+#include <iostream> 
+#include <algorithm> // для std::swap. В C++11 используйте заголовок <utility>
+
+int main1()
+{
+    const int length = 5;
+    int array[length] = { 30, 50, 20, 10, 40 };
+
+    // Перебираем каждый элемент массива (кроме последнего, он уже будет отсортирован к тому времени, когда мы до него доберемся)
+    for (int startIndex = 0; startIndex < length - 1; ++startIndex)
+    {
+        // В переменной smallestIndex хранится индекс наименьшего значения, которое мы нашли в этой итерации.
+        // Начинаем с того, что наименьший элемент в этой итерации - это первый элемент (индекс 0)
+        int smallestIndex = startIndex;
+
+        // Затем ищем элемент поменьше в остальной части массива
+        for (int currentIndex = startIndex + 1; currentIndex < length; ++currentIndex)
+        {
+            // Если мы нашли элемент, который меньше нашего наименьшего элемента,
+            if (array[currentIndex] < array[smallestIndex])
+                // то запоминаем его
+                smallestIndex = currentIndex;
+        }
+
+        // smallestIndex теперь наименьший элемент. 
+        // Меняем местами наше начальное наименьшее число с тем, которое мы обнаружили
+        std::swap(array[startIndex], array[smallestIndex]);
+    }
+
+    // Теперь, когда весь массив отсортирован - выводим его на экран
+    for (int index = 0; index < length; ++index)
+        std::cout << array[index] << ' ';
+
+    std::cout << std::endl;
+    const int length1 = 5;
+    int array1[length1] = { 30, 50, 20, 10, 40 };
+
+    std::sort(array1, array1 + length1);
+
+    for (int i = 0; i < length1; ++i)
+        std::cout << array1[i] << ' ';
+    return 0;
+    }
+#endif
+
+#ifdef Массив в цикле пример
+#include <iostream>
+
+int main1()
+{
+    int students[] = { 73, 85, 84, 44, 78 };
+    const int numStudents = sizeof(students) / sizeof(students[0]);
+
+    int maxScore = 0; // отслеживаем самую высокую оценку
+    for (int person = 0; person < numStudents; ++person)
+        if (students[person] > maxScore)
+            maxScore = students[person];
+
+    std::cout << "The best score was " << maxScore << '\n';
+
+    return 0;
+}
+#endif
+
+#ifdef фиксированый массив
+namespace StudentNames
+{
+    enum StudentNames
+    {
+        SMITH, // 0
+        ANDREW, // 1
+        IVAN, // 2
+        JOHN, // 3
+        ANTON, // 4
+        MISHA, // 5
+        MAX_STUDENTS // 6
+    };
+}
+
+int main1()
+{
+    int testScores[StudentNames::MAX_STUDENTS]; // всего 6 студентов
+    testScores[StudentNames::JOHN] = 65;
+    std::cout << testScores[StudentNames::JOHN];
     return 0;
 }
 #endif
