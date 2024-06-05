@@ -2,13 +2,484 @@
 #define DEBUG
 
 #ifdef DEBUG
+int returnByValue()
+{
+    return 7;
+}
+
+int& returnByReference()
+{
+    static int y = 7; // static гарантирует то, что переменная y не уничтожится, когда выйдет из локальной области видимости
+    return y;
+}
+
+int main1()
+{
+    int value = returnByReference(); // случай A: всё хорошо, обрабатывается как возврат по значению
+    const int& ref = returnByValue(); // случай B: ошибка компилятора, так как 7 - это r-value, а r-value не может быть привязано к неконстантной ссылке
+    const int& cref = returnByValue(); // случай C: всё хорошо, время жизни возвращаемого значения продлевается в соответствии со временем жизни cref
+}
+#endif
+
+#ifdef inline_f 
+#include <iostream>
+
+inline int constexpr max(int a, int b) noexcept
+{
+    return a < b ? b : a;
+}
+int main1()
+{
+    std::cout << max(7, 8) << '\n';
+    std::cout << max(5, 4) << '\n';
+    return 0;
+}
+#endif
+
+#ifdef Возврат_значений
+#include <iostream> 
+#include <array>
+
+// Возвращаем ссылку на элемент массива по индексу index
+int& getElement(std::array<int, 20>& array, int index)
+{
+    // Мы знаем, что array[index] не уничтожится, когда мы будем возвращать данные в caller (так как caller сам передал этот array в функцию!)
+    // Так что здесь не должно быть никаких проблем с возвратом по ссылке 
+    return array[index];
+}
+
+int* allocateArray(int size)
+{
+    return new int[size];
+}
+
+int main1()
+{
+    int* array = allocateArray(20);
+
+    // Делаем что-нибудь с array
+
+    delete[] array;
+
+    std::array<int, 20> array1;
+
+    // Присваиваем элементу массива под индексом 15 значение 7
+    getElement(array1, 15) = 7;
+
+    std::cout << array1[15] << '\n';
+
+
+    return 0;
+}
+#endif
+
+#ifdef Блэкджек
+#include <iostream>
+#include <array>
+#include <ctime> // для time()
+#include <cstdlib> // для rand() и srand()
+
+enum CardSuit
+{
+    SUIT_TREFU,
+    SUIT_BYBNU,
+    SUIT_CHERVU,
+    SUIT_PIKI,
+    MAX_SUITS
+};
+
+enum CardRank
+{
+    RANK_2,
+    RANK_3,
+    RANK_4,
+    RANK_5,
+    RANK_6,
+    RANK_7,
+    RANK_8,
+    RANK_9,
+    RANK_10,
+    RANK_VALET,
+    RANK_DAMA,
+    RANK_KOROL,
+    RANK_TYZ,
+    MAX_RANKS
+};
+
+struct Card
+{
+    CardRank rank;
+    CardSuit suit;
+};
+
+void printCard(const Card& card)
+{
+    switch (card.rank)
+    {
+    case RANK_2:		std::cout << "2"; break;
+    case RANK_3:		std::cout << "3"; break;
+    case RANK_4:		std::cout << "4"; break;
+    case RANK_5:		std::cout << "5"; break;
+    case RANK_6:		std::cout << "6"; break;
+    case RANK_7:		std::cout << "7"; break;
+    case RANK_8:		std::cout << "8"; break;
+    case RANK_9:		std::cout << "9"; break;
+    case RANK_10:		std::cout << "T"; break;
+    case RANK_VALET:	std::cout << "V"; break;
+    case RANK_DAMA:	        std::cout << "D"; break;
+    case RANK_KOROL:	std::cout << "K"; break;
+    case RANK_TYZ:		std::cout << "T"; break;
+    }
+
+    switch (card.suit)
+    {
+    case SUIT_TREFU:	std::cout << "TR"; break;
+    case SUIT_BYBNU:	std::cout << "B"; break;
+    case SUIT_CHERVU:	std::cout << "CH"; break;
+    case SUIT_PIKI:	        std::cout << "P"; break;
+    }
+}
+
+void printDeck(const std::array<Card, 52>& deck)
+{
+    for (const auto& card : deck)
+    {
+        printCard(card);
+        std::cout << ' ';
+    }
+
+    std::cout << '\n';
+}
+
+void swapCard(Card& a, Card& b)
+{
+    Card temp = a;
+    a = b;
+    b = temp;
+}
+
+// Генерируем случайное число между min и max (предполагается, что функция srand() уже была вызвана)
+int getRandomNumber(int min, int max)
+{
+    static const double fraction = 1.0 / (static_cast<double>(RAND_MAX) + 1.0);
+    // Равномерно распределяем генерацию случайного числа в диапазоне значений
+    return static_cast<int>(rand() * fraction * (max - min + 1) + min);
+}
+
+void shuffleDeck(std::array<Card, 52>& deck)
+{
+    // Перебираем каждую карту в колоде
+    for (int index = 0; index < 52; ++index)
+    {
+        // Выбираем любую случайную карту
+        int swapIndex = getRandomNumber(0, 51);
+        // Меняем местами с нашей текущей картой
+        swapCard(deck[index], deck[swapIndex]);
+    }
+}
+
+int getCardValue(const Card& card)
+{
+    switch (card.rank)
+    {
+    case RANK_2:		return 2;
+    case RANK_3:		return 3;
+    case RANK_4:		return 4;
+    case RANK_5:		return 5;
+    case RANK_6:		return 6;
+    case RANK_7:		return 7;
+    case RANK_8:		return 8;
+    case RANK_9:		return 9;
+    case RANK_10:		return 10;
+    case RANK_VALET:	return 10;
+    case RANK_DAMA:	    return 10;
+    case RANK_KOROL:	return 10;
+    case RANK_TYZ:		return 11;
+    }
+
+    return 0;
+}
+
+char getPlayerChoice()
+{
+    std::cout << "(h) to hit, or (s) to stand: ";
+    char choice;
+    do
+    {
+        std::cin >> choice;
+    } while (choice != 'h' && choice != 's');
+
+    return choice;
+}
+
+bool playBlackjack(const std::array<Card, 52>& deck)
+{
+    // Настраиваем стартовый режим игры
+    const Card* cardPtr = &deck[0];
+
+    int playerTotal = 0;
+    int dealerTotal = 0;
+
+    // Дилер получает одну карту
+    dealerTotal += getCardValue(*cardPtr++);
+    std::cout << "The dealer is showing: " << dealerTotal << '\n';
+
+    // Игрок получает две карты
+    playerTotal += getCardValue(*cardPtr++);
+    playerTotal += getCardValue(*cardPtr++);
+
+    // Игрок начинает
+    while (1)
+    {
+        std::cout << "You have: " << playerTotal << '\n';
+
+        // Смотрим, не больше ли 21 очка у игрока
+        if (playerTotal > 21)
+            return false;
+
+        char choice = getPlayerChoice();
+        if (choice == 's')
+            break;
+
+        playerTotal += getCardValue(*cardPtr++);
+    }
+
+    // Если игрок не проиграл и у него не больше 21 очка, то тогда дилер получает карты до тех пор, пока у него не получится в сумме 17 очков
+    while (dealerTotal < 17)
+    {
+        dealerTotal += getCardValue(*cardPtr++);
+        std::cout << "The dealer now has: " << dealerTotal << '\n';
+    }
+
+    // Если у дилера больше 21 очка, то игрок победил
+    if (dealerTotal > 21)
+        return true;
+
+    return (playerTotal > dealerTotal);
+}
+
+int main1()
+{
+    srand(static_cast<unsigned int>(time(0))); // устанавливаем значение системных часов в качестве стартового числа 
+    rand(); // если используете Visual Studio, сбрасываем первое сгенерированное рандомное число
+
+    std::array<Card, 52> deck;
+
+    // Можно было бы вручную (по отдельности) инициализировать каждую карту, но мы ведь программисты! Цикл нам в помощь!
+    int card = 0;
+    for (int suit = 0; suit < MAX_SUITS; ++suit)
+        for (int rank = 0; rank < MAX_RANKS; ++rank)
+        {
+            deck[card].suit = static_cast<CardSuit>(suit);
+            deck[card].rank = static_cast<CardRank>(rank);
+            ++card;
+        }
+
+    shuffleDeck(deck);
+
+    if (playBlackjack(deck))
+        std::cout << "You win!\n";
+    else
+        std::cout << "You lose!\n";
+
+    return 0;
+}
+#endif
+
+#ifdef std_vector
+#include <vector>
+#include <iostream>
+
+int main1()
+{
+    std::vector<int> array{ 0, 1, 4, 7, 9, 11 };
+    array.resize(4); // изменяем длину array на 4
+
+    std::cout << "The length is: " << array.size() << '\n';
+
+    for (auto const& element : array)
+        std::cout << element << ' ';
+
+    return 0;
+}
+#endif
+
+#ifdef std_array
+//std::array — это отличная замена стандартных фиксированных массивов.
+#include <iostream>
+#include <array>
+#include <algorithm> // для std::sort
+
+int main1()
+{
+    std::array<int, 5> myarray{ 8, 4, 2, 7, 1 };
+    std::sort(myarray.begin(), myarray.end()); // сортировка массива по возрастанию
+//    std::sort(myarray.rbegin(), myarray.rend()); // сортировка массива по убыванию
+
+    for (const auto& element : myarray)
+        std::cout << element << ' ';
+
+    return 0;
+}
+#endif
+
+#ifdef Указатель_на_указатель
 #include <iostream>
 #include <bitset>
 int main1() {
-    int array[]{ 4, 5, 8, 9, 12 };
-    float i = 90;
-    i = i / 3.6;
-    std::cout << i << "\n";
+    int** array = new int* [15]; // выделяем массив из 15 указателей типа int — это наши строки
+    for (int count = 0; count < 15; ++count)
+        array[count] = new int[7]; // а это наши столбцы
+
+    for (int count = 0; count < 15; ++count)
+        delete[] array[count];
+    delete[] array; // это следует выполнять в конце
+    return 0;
+}
+#endif
+
+#ifdef void_указатель //void*
+//Указатель типа void — это указатель, который может указывать на объект 
+//любого типа данных, но он сам не знает, какой это будет тип.
+//Для разыменования указатель типа void должен быть явно преобразован 
+//с помощью оператора static_cast в другой тип данных.Нулевой указатель — это указатель, 
+//который не указывает на адрес.Указатель типа void может быть нулевым указателем.
+#include <iostream>
+
+enum Type
+{
+    INT,
+    DOUBLE,
+    CSTRING
+};
+
+void printValue(void* ptr, Type type)
+{
+    switch (type)
+    {
+    case INT:
+        std::cout << *static_cast<int*>(ptr) << '\n'; // конвертируем в указатель типа int и выполняем разыменование
+        break;
+    case DOUBLE:
+        std::cout << *static_cast<double*>(ptr) << '\n'; // конвертируем в указатель типа double и выполняем разыменование
+        break;
+    case CSTRING:
+        std::cout << static_cast<char*>(ptr) << '\n'; // конвертируем в указатель типа char (без разыменования)
+        // std::cout знает, что char* следует обрабатывать как строку C-style.
+        // Если бы мы разыменовали результат (целое выражение), то тогда бы вывелся просто первый символ из массива букв, на который указывает ptr
+        break;
+    }
+}
+
+int main1()
+{
+    int nValue = 7;
+    double dValue = 9.3;
+    char szValue[] = "Jackie";
+
+    printValue(&nValue, INT);
+    printValue(&dValue, DOUBLE);
+    printValue(szValue, CSTRING);
+
+    return 0;
+}
+
+#endif
+
+#ifdef Константная_Ссылка
+#include <iostream>
+
+void printIt(const int& a)
+{
+    std::cout << a;
+}
+
+int main1()
+{
+    int x = 3;
+    printIt(x); // неконстантное l-value
+
+    const int y = 4;
+    printIt(y); // константное l-value
+
+    printIt(5); // литерал в качестве r-value
+
+    printIt(3 + y); // выражение в качестве r-value
+
+    return 0;
+}
+#endif
+
+#ifdef Константные_указатели
+#include <iostream>
+#include <bitset>
+int main1() {
+    int value = 7;
+    // ptr1 указывает на "const int", поэтому это указатель на константное значение 
+    const int* ptr1 = &value;
+    // ptr2 указывает на "int", поэтому это константный указатель на неконстантное значение
+    int* const ptr2 = &value; 
+    // ptr3 указывает на "const int", поэтому это константный указатель на константное значение    
+    const int* const ptr3 = &value;
+
+    return 0;
+}
+#endif
+
+#ifdef Динамические массивы
+#include <iostream>
+#include <string>
+#include <utility> // для std::swap(). Если у вас не поддерживается C++11, то тогда #include <algorithm>
+
+void sortArray(std::string* array, int length)
+{
+    // Перебираем каждый элемент массива
+    for (int startIndex = 0; startIndex < length; ++startIndex)
+    {
+        // smallestIndex - индекс наименьшего элемента, с которым мы столкнулись
+        int smallestIndex = startIndex;
+
+        // Ищем наименьший элемент, который остался в массиве (начиная со startIndex+1)
+        for (int currentIndex = startIndex + 1; currentIndex < length; ++currentIndex)
+        {
+            // Если текущий элемент меньше нашего ранее найденного наименьшего элемента,
+            if (array[currentIndex] < array[smallestIndex])
+                // то тогда это новое наименьшее значение в этой итерации
+                smallestIndex = currentIndex;
+        }
+
+        // Меняем местами наш начальный элемент с найденным наименьшим элементом массива
+        std::swap(array[startIndex], array[smallestIndex]);
+    }
+}
+
+int main1()
+{
+    std::cout << "How many names would you like to enter? ";
+    int length;
+    std::cin >> length;
+
+    // Выделяем массив для хранения имен
+    std::string* names = new std::string[length];
+
+    // Просим пользователя ввести все имена
+    for (int i = 0; i < length; ++i)
+    {
+        std::cout << "Enter name #" << i + 1 << ": ";
+        std::cin >> names[i];
+    }
+
+    // Сортируем массив
+    sortArray(names, length);
+
+    std::cout << "\nHere is your sorted list:\n";
+    // Выводим отсортированный массив
+    for (int i = 0; i < length; ++i)
+        std::cout << "Name #" << i + 1 << ": " << names[i] << '\n';
+
+    delete[] names; // не забываем использовать оператор delete[] для освобождения памяти
+    names = nullptr; // используйте 0, если не поддерживается C++11
+
     return 0;
 }
 #endif
