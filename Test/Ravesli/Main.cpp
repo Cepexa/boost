@@ -1,5 +1,5 @@
 #include <iostream>
-#define DEBUG
+#define тайминг DEBUG
 
 #ifdef DEBUG
 int returnByValue()
@@ -18,6 +18,914 @@ int main1()
     int value = returnByReference(); // случай A: всё хорошо, обрабатывается как возврат по значению
     const int& ref = returnByValue(); // случай B: ошибка компилятора, так как 7 - это r-value, а r-value не может быть привязано к неконстантной ссылке
     const int& cref = returnByValue(); // случай C: всё хорошо, время жизни возвращаемого значения продлевается в соответствии со временем жизни cref
+    return 1;
+}
+#endif
+
+#ifdef тайминг
+#include <chrono> // для функций из std::chrono
+#include <iostream>
+#include <array>
+#include <chrono> // для функций из std::chrono
+#include <algorithm> // для std::sort()
+
+const int g_arrayElements = 10000; // общее количество всех элементов массива
+
+class Timer
+{
+private:
+    // Псевдонимы типов используются для удобного доступа к вложенным типам
+    using clock_t = std::chrono::high_resolution_clock;
+    using second_t = std::chrono::duration<double, std::ratio<1> >;
+
+    std::chrono::time_point<clock_t> m_beg;
+
+public:
+    Timer() : m_beg(clock_t::now())
+    {
+    }
+
+    void reset()
+    {
+        m_beg = clock_t::now();
+    }
+
+    double elapsed() const
+    {
+        return std::chrono::duration_cast<second_t>(clock_t::now() - m_beg).count();
+    }
+};
+
+void sortArray(std::array<int, g_arrayElements>& array)
+{
+
+    // Перебираем каждый элемент массива (кроме последнего, он уже будет отсортирован к тому времени, когда мы до него доберемся)
+    for (int startIndex = 0; startIndex < g_arrayElements - 1; ++startIndex)
+    {
+        // В переменной smallestIndex хранится индекс наименьшего значения, которое мы нашли в этой итерации.
+        // Начнем с того, что наименьший элемент в этой итерации - это первый элемент (индекс 0)
+        int smallestIndex = startIndex;
+
+        // Затем ищем элемент меньше нашего smallestIndex в оставшейся части массива
+        for (int currentIndex = startIndex + 1; currentIndex < g_arrayElements; ++currentIndex)
+        {
+            // Если нашли элемент, который меньше нашего наименьшего элемента,
+            if (array[currentIndex] < array[smallestIndex])
+                // то записываем/запоминаем его
+                smallestIndex = currentIndex;
+        }
+
+        // smallestIndex теперь наименьший элемент в оставшейся части массива.
+        // Меняем местами наше стартовое наименьшее значение с тем, которое мы обнаружили
+        std::swap(array[startIndex], array[smallestIndex]);
+    }
+}
+
+int main1()
+{
+    std::array<int, g_arrayElements> array;
+    for (int i = 0; i < g_arrayElements; ++i)
+        array[i] = g_arrayElements - i;
+
+    Timer t;
+
+    std::sort(array.begin(), array.end());
+    //sortArray(array);
+
+    std::cout << "Time taken: " << t.elapsed() << '\n';
+
+    return 0;
+}
+#endif
+
+#ifdef Вложенные_типы
+#include <iostream>
+
+class Fruit
+{
+public:
+    // Мы переместили FruitList внутрь класса под спецификатор доступа public
+    enum FruitList
+    {
+        AVOCADO,
+        BLACKBERRY,
+        LEMON
+    };
+
+private:
+    FruitList m_type;
+
+public:
+
+    Fruit(FruitList type) :
+        m_type(type)
+    {
+    }
+    FruitList getType() { return m_type; }
+};
+
+int main1()
+{
+    // Доступ к FruitList осуществляется через Fruit
+    Fruit avocado(Fruit::AVOCADO);
+    if (avocado.getType() == Fruit::AVOCADO)
+        std::cout << "I am an avocado!";
+    else
+        std::cout << "I am not an avocado!";
+    return 0;
+}
+#endif
+
+#ifdef Дружественный_класс
+#include <iostream>
+
+class Values
+{
+private:
+    int m_intValue;
+    double m_dValue;
+public:
+    Values(int intValue, double dValue)
+    {
+        m_intValue = intValue;
+        m_dValue = dValue;
+    }
+
+    // Делаем класс Display другом класса Values
+    friend class Display;
+};
+
+class Display
+{
+private:
+    bool m_displayIntFirst;
+
+public:
+    Display(bool displayIntFirst) { m_displayIntFirst = displayIntFirst; }
+
+    void displayItem(Values& value)
+    {
+        if (m_displayIntFirst)
+            std::cout << value.m_intValue << " " << value.m_dValue << '\n';
+        else // или сначала выводим double
+            std::cout << value.m_dValue << " " << value.m_intValue << '\n';
+    }
+};
+
+int main1()
+{
+    Values value(7, 8.4);
+    Display display(false);
+
+    display.displayItem(value);
+
+    return 0;
+}
+#endif
+
+#ifdef Дружественные_методы
+#include <iostream>
+
+class Values; // предварительное объявление класса Values
+
+class Display
+{
+private:
+    bool m_displayIntFirst;
+
+public:
+    Display(bool displayIntFirst) { m_displayIntFirst = displayIntFirst; }
+
+    void displayItem(Values& value); // предварительное объявление, приведенное выше, требуется для этой строки
+};
+
+class Values // полное определение класса Values
+{
+private:
+    int m_intValue;
+    double m_dValue;
+public:
+    Values(int intValue, double dValue)
+    {
+        m_intValue = intValue;
+        m_dValue = dValue;
+    }
+
+    // Делаем метод Display::displayItem() другом класса Values
+    friend void Display::displayItem(Values& value);
+};
+
+// Теперь мы можем определить метод Display::displayItem(), которому требуется увидеть полное определение класса Values
+void Display::displayItem(Values& value)
+{
+    if (m_displayIntFirst)
+        std::cout << value.m_intValue << " " << value.m_dValue << '\n';
+    else // или выводим сначала double
+        std::cout << value.m_dValue << " " << value.m_intValue << '\n';
+}
+
+int main1()
+{
+    Values value(7, 8.4);
+    Display display(false);
+
+    display.displayItem(value);
+
+    return 0;
+}
+#endif
+
+#ifdef Дружественные_функции
+#include <iostream>
+
+class Humidity;
+
+class Temperature
+{
+private:
+    int m_temp;
+public:
+    Temperature(int temp = 0) { m_temp = temp; }
+
+    friend void outWeather(const Temperature& temperature, const Humidity& humidity);
+};
+
+class Humidity
+{
+private:
+    int m_humidity;
+public:
+    Humidity(int humidity = 0) { m_humidity = humidity; }
+
+    friend void outWeather(const Temperature& temperature, const Humidity& humidity);
+};
+
+void outWeather(const Temperature& temperature, const Humidity& humidity)
+{
+    std::cout << "The temperature is " << temperature.m_temp <<
+        " and the humidity is " << humidity.m_humidity << '\n';
+}
+
+int main1()
+{
+    Temperature temp(15);
+    Humidity hum(11);
+
+    outWeather(temp, hum);
+
+    return 0;
+}
+#endif
+
+#ifdef Статические_методы
+#include <iostream>
+
+class IDGenerator
+{
+private:
+    static int s_nextID; // объявление статической переменной-члена
+
+public:
+    static int getNextID(); // объявление статического метода
+};
+
+// Определение статической переменной-члена находится вне тела класса. Обратите внимание, мы не используем здесь ключевое слово static.
+// Начинаем генерировать ID с 1
+int IDGenerator::s_nextID = 1;
+
+// Определение статического метода находится вне тела класса. Обратите внимание, мы не используем здесь ключевое слово static
+int IDGenerator::getNextID() { return s_nextID++; }
+
+int main1()
+{
+    for (int count = 0; count < 4; ++count)
+        std::cout << "The next ID is: " << IDGenerator::getNextID() << '\n';
+
+    return 0;
+}
+#endif
+
+#ifdef статические_переменные_члены класса
+#include <iostream>
+
+class Anything
+{
+private:
+    static int s_idGenerator;
+    int m_id;
+
+public:
+    Anything() { m_id = s_idGenerator++; } // увеличиваем значение идентификатора для следующего объекта
+
+    int getID() const { return m_id; }
+};
+
+// Мы определяем и инициализируем s_idGenerator несмотря на то, что он объявлен как private.
+// Это нормально, поскольку определение не подпадает под действия спецификаторов доступа
+int Anything::s_idGenerator = 1; // начинаем наш ID-генератор со значения 1
+
+int main1()
+{
+    Anything first;
+    Anything second;
+    Anything third;
+
+    std::cout << first.getID() << '\n';
+    std::cout << second.getID() << '\n';
+    std::cout << third.getID() << '\n';
+    return 0;
+}
+#endif
+
+#ifdef Константные_методы_классов
+class Anything
+{
+public:
+    int m_value;
+
+    Anything() { m_value = 0; }
+
+    void resetValue() { m_value = 0; }
+    void setValue(int value) { m_value = value; }
+
+    const int& getValue() const; // обратите внимание на ключевое слово const здесь
+    int& getValue(); 
+};
+const int& Anything::getValue() const // и здесь
+{
+    return m_value;
+}
+int& Anything::getValue()
+{
+    return m_value;
+}
+int main1()
+{
+    const Anything anything; // вызываем конструктор по умолчанию
+
+    //anything.m_value = 7; // ошибка компиляции: нарушение const
+    //anything.setValue(7); // ошибка компиляции: нарушение const
+    std::cout << anything.getValue();
+    return 0;
+}
+#endif
+
+#ifdef Методы_отдельно от класса
+class Mathem
+{
+private:
+    int m_value = 0;
+
+public:
+    Mathem(int value = 0);
+
+    Mathem& add(int value);
+    Mathem& sub(int value);
+    Mathem& divide(int value);
+
+    int getValue() { return m_value; }
+};
+
+Mathem::Mathem(int value) : m_value(value)
+{
+}
+
+Mathem& Mathem::add(int value)
+{
+    m_value += value;
+    return *this;
+}
+
+Mathem& Mathem::sub(int value)
+{
+    m_value -= value;
+    return *this;
+}
+
+Mathem& Mathem::divide(int value)
+{
+    m_value /= value;
+    return *this;
+}
+#endif
+
+#ifdef делегирующие конструкторы
+#include <iostream> 
+#include <string>
+
+class Employee
+{
+private:
+    int m_id;
+    std::string m_name;
+
+public:
+    Employee(int id = 0, const std::string& name = "") :
+        m_id(id), m_name(name)
+    {
+        std::cout << "Employee " << m_name << " created.\n";
+    }
+
+    // Используем делегирующие конструкторы для сокращения дублированного кода
+    Employee(const std::string& name) : Employee(0, name) { }
+};
+
+int main1()
+{
+    Employee a;
+    Employee b("Ivan");
+
+    return 0;
+}
+#endif
+
+#ifdef списки_инициализации
+#include <iostream>
+class A
+{
+public:
+    A(int a) { std::cout << "A " << a << "\n"; }
+};
+class Values
+{
+private:
+    int m_value1;
+    double m_value2;
+    char m_value3{ 'c' };
+    const int m_array[7];
+    A m_a;
+public:
+    Values(int value1, double value2, char value3 = 's' , int b = 2)
+        : m_value1(value1), m_value2(value2), m_value3{ value3 }, // напрямую инициализируем переменные-члены класса
+        m_array{ 3, 4, 5, 6, 7, 8, 9 }, // используем uniform-инициализацию для инициализации массива
+        m_a(b - 1)
+    {
+        // Нет необходимости использовать присваивание
+    }
+
+    void print()
+    {
+        std::cout << "Values(" << m_value1 << ", " << m_value2 << ", " << m_value3 << ")\n";
+    }
+
+};
+int main1()
+{
+    Values value(3, 4.5); // value1 = 3, value2 = 4.5, value3 = 'd' (значение по умолчанию)
+    value.print();
+    return 0;
+}
+#endif
+
+#ifdef Stack_OOP
+#include <iostream>
+#include <cassert>
+
+class Fraction
+{
+private:
+    int m_numerator;
+    int m_denominator;
+
+public:
+    // Конструктор по умолчанию
+    Fraction(int numerator = 0, int denominator = 1)
+    {
+        assert(denominator != 0);
+        m_numerator = numerator;
+        m_denominator = denominator;
+    }
+
+    int getNumerator() { return m_numerator; }
+    int getDenominator() { return m_denominator; }
+    double getValue() { return static_cast<double>(m_numerator) / m_denominator; }
+};
+
+class Stack
+{
+private:
+    int m_array[10]; // это будут данные нашего стека 
+    int m_next; // это будет индексом следующего свободного элемента стека
+
+public:
+
+    void reset()
+    {
+        m_next = 0;
+        for (int i = 0; i < 10; ++i)
+            m_array[i] = 0;
+    }
+
+    bool push(int value)
+    {
+        // Если стек уже заполнен, то возвращаем false
+        if (m_next == 10)
+            return false;
+
+        m_array[m_next++] = value; // присваиваем следующему свободному элементу значение value, а затем увеличиваем m_next
+        return true;
+    }
+
+    int pop()
+    {
+        // Если элементов в стеке нет, то выводим стейтмент assert
+        assert(m_next > 0);
+
+        // m_next указывает на следующий свободный элемент, поэтому последний элемент со значением - это m_next-1.
+        // Мы хотим сделать следующее:
+        // int val = m_array[m_next-1]; // получаем последний элемент со значением
+        // --m_next; // m_next теперь на единицу меньше, так как мы только что вытянули верхний элемент стека
+        // return val; // возвращаем элемент
+        // Весь вышеприведенный код можно заменить следующей (одной) строкой кода
+        return m_array[--m_next];
+    }
+
+    void print()
+    {
+        std::cout << "( ";
+        for (int i = 0; i < m_next; ++i)
+            std::cout << m_array[i] << ' ';
+        std::cout << ")\n";
+    }
+};
+
+int main1()
+{
+    Stack stack;
+    stack.reset();
+
+    stack.print();
+
+    stack.push(3);
+    stack.push(7);
+    stack.push(5);
+    stack.print();
+
+    stack.pop();
+    stack.print();
+
+    stack.pop();
+    stack.pop();
+
+    stack.print();
+    Fraction drob; // вызов Fraction(0, 1)
+    Fraction seven(7); // вызов Fraction(7, 1)
+    Fraction sixTwo(6, 2); // вызов Fraction(6, 2)
+    return 0;
+    }
+#endif
+
+#ifdef Бинарный поиск
+// array - это массив, в котором мы проводим поиски.
+// target - это искомое значение.
+// min - это индекс минимальной границы массива, в котором мы осуществляем поиск.
+// max - это индекс максимальной границы массива, в котором мы осуществляем поиск.
+// Функция binarySearch() должна возвращать индекс искомого значения, если он обнаружен. В противном случае, возвращаем -1
+int binarySearch(int* array, int target, int min, int max)
+{
+    while (min <= max)
+    {
+        // Итеративная реализация
+        int midpoint = min + ((max - min) / 2); // такой способ вычисления середины массива избегает вероятность возникновения переполнения
+
+        if (array[midpoint] > target)
+        {
+            // Если array[midpoint] > target, то тогда понимаем, что искомое число не находится в правой половине массива.
+            // Мы можем использовать midpoint - 1 в качестве индекса максимальной границы, так как в следующей итерации этот индекс вычислять не нужно
+            max = midpoint - 1;
+        }
+        else if (array[midpoint] < target)
+        {
+            // Если array[midpoint] < target, то тогда понимаем, что искомое число не находится в левой половине массива.
+            // Мы можем использовать midpoint + 1 в качестве индекса минимальной границы, так как в следующей итерации этот индекс вычислять не нужно
+            min = midpoint + 1;
+        }
+        else
+            return midpoint;
+    }
+
+    return -1;
+}
+int main1()
+{
+    int array[] = { 4, 7, 9, 13, 15, 19, 22, 24, 28, 33, 37, 41, 43, 47, 50 };
+
+    std::cout << "Enter a number: ";
+    int x;
+    std::cin >> x;
+
+    int index = binarySearch(array, x, 0, 14);
+
+    if (array[index] == x)
+        std::cout << "Good! Your value " << x << " is on position " << index << " in array!\n";
+    else
+        std::cout << "Fail! Your value " << x << " isn't in array!\n";
+    return 0;
+}
+#endif
+
+#ifdef Эллипсис3 строка-декодер
+#include <iostream>
+#include <string>
+#include <cstdarg> // требуется для использования эллипсиса
+
+// Эллипсис должен быть последним параметром 
+double findAverage(std::string decoder, ...)
+{
+    double sum = 0;
+
+    // Мы получаем доступ к эллипсису через va_list, поэтому объявляем переменную этого типа
+    va_list list;
+
+    // Инициализируем va_list, используя va_start. Первый параметр - это список, который необходимо инициализировать.
+    // Второй параметр - это последний параметр, который не является эллипсисом
+    va_start(list, decoder);
+
+    int count = 0;
+    // Бесконечный цикл
+    while (1)
+    {
+        char codetype = decoder[count];
+        switch (codetype)
+        {
+        default:
+        case '\0':
+            // Выполняем очистку va_list, когда уже сделали всё необходимое
+            va_end(list);
+            return sum / count;
+
+        case 'i':
+            sum += va_arg(list, int);
+            count++;
+            break;
+
+        case 'd':
+            sum += va_arg(list, double);
+            count++;
+            break;
+        }
+    }
+}
+
+int main1()
+{
+    std::cout << findAverage("iiii", 1, 2, 3, 4) << '\n';
+    std::cout << findAverage("iiiii", 1, 2, 3, 4, 5) << '\n';
+    std::cout << findAverage("ididdi", 1, 2.2, 3, 3.5, 4.5, 5) << '\n';
+    return 0;
+}
+#endif
+
+#ifdef Эллипсис2 контрольное значение
+#include <iostream>
+#include <cstdarg> // требуется для использования эллипсиса 
+
+// Эллипсис должен быть последним параметром
+double findAverage(int first, ...)
+{
+    // Обработка первого значения
+    double sum = first;
+
+    // Мы получаем доступ к эллипсису через va_list, поэтому объявляем переменную этого типа
+    va_list list;
+
+    // Инициализируем va_list, используя va_start. Первый параметр - это список, который нужно инициализировать.
+    // Второй параметр - это последний параметр, который не является эллипсисом
+    va_start(list, first);
+
+    int count = 1;
+    // Бесконечный цикл
+    while (1)
+    {
+        // Используем va_arg для получения параметров из эллипсиса.
+        // Первый параметр - это va_list, который мы используем.
+        // Второй параметр - это ожидаемый тип параметров
+        int arg = va_arg(list, int);
+
+        // Если текущий параметр является контрольным значением, то прекращаем выполнение цикла
+        if (arg == -1)
+            break;
+
+        sum += arg;
+        count++;
+    }
+
+    // Выполняем очистку va_list, когда уже сделали всё необходимое
+    va_end(list);
+
+    return sum / count;
+}
+
+int main1()
+{
+    std::cout << findAverage(1, 2, 3, 4, -1) << '\n';
+    std::cout << findAverage(1, 2, 3, 4, 5, -1) << '\n';
+    return 0;
+}
+#endif
+
+#ifdef Эллипсис ...
+#include <iostream>
+#include <cstdarg> // требуется для использования эллипсиса
+
+// Эллипсис должен быть последним параметром.
+// Переменная count - это количество переданных аргументов
+double findAverage(int count, ...)
+{
+    double sum = 0;
+
+    // Мы получаем доступ к эллипсису через va_list, поэтому объявляем переменную этого типа
+    va_list list;
+
+    // Инициализируем va_list, используя va_start. Первый параметр - это список, который нужно инициализировать.
+    // Второй параметр - это последний параметр, который не является эллипсисом
+    va_start(list, count);
+
+    // Перебираем каждый из аргументов эллипсиса 
+    for (int arg = 0; arg < count; ++arg)
+        // Используем va_arg для получения параметров из эллипсиса.
+        // Первый параметр - это va_list, который мы используем.
+        // Второй параметр - это ожидаемый тип параметров
+        sum += va_arg(list, int);
+
+    // Выполняем очистку va_list, когда уже сделали всё необходимое 
+    va_end(list);
+
+    return sum / count;
+}
+
+int main1()
+{
+    std::cout << findAverage(4, 1, 2, 3, 4) << '\n';
+    std::cout << findAverage(5, 1, 2, 3, 4, 5) << '\n';
+    return 0;
+}
+#endif
+
+#ifdef Обработка_числовых_аргументов
+#include <iostream>
+#include <string>
+#include <sstream> // для std::stringstream
+#include <cstdlib> // для exit()
+
+int main(int argc, char* argv[])
+{
+    if (argc <= 1)
+    {
+        // В некоторых операционных системах argv[0] может быть просто пустой строкой, без имени программы
+
+        // Обрабатываем случай, когда argv[0] может быть пустым или не пустым
+        if (argv[0])
+            std::cout << "Usage: " << argv[0] << " <number>" << '\n';
+        else
+            std::cout << "Usage: <program name> <number>" << '\n';
+
+        exit(1);
+    }
+
+    std::stringstream convert(argv[1]); // создаем переменную stringstream с именем convert, инициализируя её значением argv[1]
+
+    int myint;
+    if (!(convert >> myint)) // выполняем конвертацию
+        myint = 0; // если конвертация терпит неудачу, то присваиваем myint значение по умолчанию
+
+    std::cout << "Got integer: " << myint << '\n';
+
+    return 0;
+}
+#endif
+
+#ifdef static_assert_
+#include <cassert> // для assert()
+#include <array>
+int getArrayValue(const std::array<int, 10>& array, int index)
+{
+    // Предполагается, что значение index-а находится между 0 и 8
+    assert(index >= 0 && index <= 8); // это строка 6 в Program.cpp
+
+    return array[index];
+}
+static_assert(sizeof(int) == 4, "int must be 4 bytes");
+static_assert(sizeof(long) == 4, "long must be 4 bytes");
+int main1()
+{
+    std::array<int,10> myarray{ 8, 4, 2, 7, 1 };
+    getArrayValue(myarray, 10);
+    return 0;
+}
+#endif
+
+#ifdef cerr_
+void printString(const char* cstring)
+{
+    // Выводим cstring при условии, что он не нулевой
+    if (cstring)
+        std::cout << cstring;
+    else
+        std::cerr << "function printString() received a null parameter";
+}
+int main1()
+{
+    printString("Hello world!");
+    std::cout << std::endl;
+    printString(nullptr);
+    return 0;
+}
+#endif
+
+#ifdef Передача_функций в качестве аргументов
+#include <iostream> 
+#include <utility>
+#include <functional>
+//typedef bool (*validateFcn)(int, int);
+using validateFcn = std::function<bool(int, int)>;
+// Вот функция сравнения, которая выполняет сортировку в порядке возрастания (обратите внимание, это та же функция ascending(), что и в примере, приведенном выше)
+bool ascending(int a, int b)
+{
+    return a > b; // меняем местами, если первый элемент больше второго
+}
+
+// Вот функция сравнения, которая выполняет сортировку в порядке убывания
+bool descending(int a, int b)
+{
+    return a < b; // меняем местами, если второй элемент больше первого
+}
+// Обратите внимание, третьим параметром является пользовательский выбор выполнения сортировки
+void selectionSort(int* array, int size, validateFcn pfcn = ascending)
+{
+    // Перебираем каждый элемент массива
+    for (int startIndex = 0; startIndex < size; ++startIndex)
+    {
+        // bestIndex - это индекс наименьшего/наибольшего элемента, который мы обнаружили до этого момента
+        int bestIndex = startIndex;
+
+        // Ищем наименьший/наибольший элемент среди оставшихся в массиве (начинаем со startIndex+1)
+        for (int currentIndex = startIndex + 1; currentIndex < size; ++currentIndex)
+        {
+            // Если текущий элемент меньше/больше нашего предыдущего найденного наименьшего/наибольшего элемента,
+            if (pfcn(array[bestIndex], array[currentIndex])) // СРАВНЕНИЕ ВЫПОЛНЯЕТСЯ ЗДЕСЬ
+                // то это наш новый наименьший/наибольший элемент в этой итерации
+                bestIndex = currentIndex;
+        }
+
+        // Меняем местами наш стартовый элемент с найденным наименьшим/наибольшим элементом
+        std::swap(array[startIndex], array[bestIndex]);
+    }
+}
+
+// Эта функция выводит значения массива
+void printArray(int* array, int size)
+{
+    for (int index = 0; index < size; ++index)
+        std::cout << array[index] << " ";
+    std::cout << '\n';
+}
+
+int main1()
+{
+    int array[8] = { 4, 8, 5, 6, 2, 3, 1, 7 };
+
+    // Сортируем массив в порядке убывания, используя функцию descending()
+    selectionSort(array, 8, descending);
+    printArray(array, 8);
+
+    // Сортируем массив в порядке возрастания, используя функцию ascending()
+    selectionSort(array, 8);
+    printArray(array, 8);
+
+    return 0;
+}
+#endif
+
+#ifdef указатель_на_функцию
+/*
+// Прототипы функций
+int boo();
+double doo();
+int moo(int a);
+// Присваивание значений указателям на функции
+int (*fcnPtr1)() = boo; // ок
+int (*fcnPtr2)() = doo; // не ок: тип указателя и тип возврата функции не совпадают!
+double (*fcnPtr4)() = doo; // ок
+fcnPtr1 = moo; // не ок: fcnPtr1 не имеет параметров, но moo() имеет
+int (*fcnPtr3)(int) = moo; // ок
+*/
+int boo()
+{
+    return 7;
+}
+
+int doo()
+{
+    return 8;
+}
+
+int main1()
+{
+    int (*fcnPtr)() = boo; // fcnPtr указывает на функцию boo()
+    fcnPtr = doo; // fcnPtr теперь указывает на функцию doo()
+
+    return 0;
 }
 #endif
 
@@ -1596,7 +2504,7 @@ int pow(int base, int exp)
 }
 #endif // Степень_int
 
-int main() {
+int main(int argc, char* argv[]) {
     system("chcp 1251 > nul");
     main1();
     return 0;
