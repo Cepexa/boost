@@ -1,5 +1,5 @@
 #include <iostream>
-#define тайминг DEBUG
+#define DEBUG1
 
 #ifdef DEBUG
 int returnByValue()
@@ -2504,8 +2504,3 @@ int pow(int base, int exp)
 }
 #endif // Степень_int
 
-int main(int argc, char* argv[]) {
-    system("chcp 1251 > nul");
-    main1();
-    return 0;
-}
