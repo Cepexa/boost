@@ -1,5 +1,395 @@
 #include <iostream>
-#define Конструкторы_преобразования
+#define Итоговый_тест1
+
+#ifdef Итоговый_тест
+
+
+
+class Average
+{
+public:
+	Average();
+	~Average();
+	Average& operator += (const int32_t& value) {
+		sum += value;
+		++count;
+		return *this;
+	}
+	friend std::ostream& operator << (std::ostream& out, const Average& a);
+private:
+	int32_t sum = 0;
+	int8_t count = 0;
+};
+Average::Average()
+{
+}
+Average::~Average()
+{
+}
+std::ostream& operator << (std::ostream& out, const Average& a) {
+	out << static_cast<double>(a.sum) / a.count;
+	return out;
+}
+
+#include <cassert> // для стейтментов assert
+class IntArray
+{
+public:
+	IntArray(int size);
+	IntArray(const IntArray& ia);
+	~IntArray();
+	int& operator[] (const int& index);
+	IntArray& operator = (const IntArray& ia);
+	friend std::ostream& operator << (std::ostream& out, const IntArray& a);
+private:
+	int* arr;
+	int size;
+};
+IntArray& IntArray::operator = (const IntArray& ia) {
+	if (&ia == this) 
+		return *this;
+	delete[] arr;// Если массив уже существует, то удаляем его, дабы не произошла утечка памяти
+
+	size = ia.size;
+	arr = new int[size];
+	for (int i = 0; i < size; i++)
+	{
+		arr[i] = ia.arr[i];
+	}
+	return *this;
+}
+std::ostream& operator << (std::ostream& out, const IntArray& a) {
+	for (int i = 0; i < a.size; i++)
+	{
+		out << *(a.arr + i) << ' ';
+	}
+	return out;
+}
+int& IntArray::operator[] (const int& index) {
+	assert(index >= 0);
+	assert(index < size);
+	return arr[index];
+}
+IntArray::IntArray(int size):size(size)
+{
+	assert(size > 0 && "IntArray length should be a positive integer");
+	arr = new int[size] {0};
+}
+IntArray::IntArray(const IntArray& ia): size(ia.size)
+{
+	arr = new int[size];
+	for (int i = 0; i < size; i++)
+	{
+		arr[i] = ia.arr[i];
+	}
+}
+IntArray::~IntArray()
+{
+	delete[] arr;
+}
+IntArray fillArray()
+{
+	IntArray a(6);
+	a[0] = 6;
+	a[1] = 7;
+	a[2] = 3;
+	a[3] = 4;
+	a[4] = 5;
+	a[5] = 8;
+
+	return a;
+}
+
+class FixedPoint
+{
+public:
+	FixedPoint(int16_t first, int16_t second);
+	FixedPoint(double d);
+	~FixedPoint();
+	operator double() const;
+	friend std::ostream& operator<< (std::ostream& out, const FixedPoint& fp);
+	friend bool operator==(const FixedPoint& fp1, const FixedPoint& fp2)
+	{
+		return (fp1.first == fp2.first && fp1.second == fp2.second);
+	}
+
+	friend std::istream& operator >> (std::istream& in, FixedPoint& fp)
+	{
+		double d;
+		in >> d;
+		fp = FixedPoint(d);
+
+		return in;
+	}
+
+	friend FixedPoint operator+(const FixedPoint& fp1, const FixedPoint& fp2)
+	{
+		return FixedPoint(static_cast<double>(fp1) + static_cast<double>(fp2));
+	}
+
+	FixedPoint operator-()
+	{
+		return FixedPoint(-first, -second);
+	}
+private:
+	int16_t first;
+	int16_t second;
+	bool sign;
+};
+
+FixedPoint::FixedPoint(int16_t first, int16_t second):first(abs(first)), 
+													  second(abs(second)),
+												      sign(second >= 0 && first >= 0)
+{}
+FixedPoint::FixedPoint(double d)
+{
+	// Сначала нам нужно получить целую часть значения.
+	// Мы можем сделать это, конвертируя наше число типа double в число типа int
+	first = static_cast<int16_t>(d); // отбрасывается дробная часть
+
+	// Теперь нам нужно получить дробную часть нашего значения:
+	// 1) d - m_base оставляет только дробную часть,
+	// 2) которую затем мы можем умножить на 100, переместив две цифры из дробной части в целую часть значения
+	// 3) теперь мы можем это дело округлить
+	// 4) и, наконец, конвертировать в тип int, чтобы отбросить любую дополнительную дробь
+	second = static_cast<std::int8_t>(round((d - first) * 100));
+}
+FixedPoint::~FixedPoint()
+{
+}
+
+FixedPoint::operator double() const {
+	return (this->sign ? 1 : -1) * (this->first +  static_cast<double> (this->second) / 100);
+}
+std::ostream& operator<< (std::ostream& out, const FixedPoint& fp) {
+	out << static_cast<double>(fp);
+	return out;
+}
+void SomeTest()
+{
+	std::cout << std::boolalpha;
+	std::cout << (FixedPoint(0.75) + FixedPoint(1.23) == FixedPoint(1.98)) << '\n'; // оба значения положительные, никакого переполнения
+	std::cout << (FixedPoint(0.75) + FixedPoint(1.50) == FixedPoint(2.25)) << '\n'; // оба значения положительные, переполнение
+	std::cout << (FixedPoint(-0.75) + FixedPoint(-1.23) == FixedPoint(-1.98)) << '\n'; // оба значения отрицательные, никакого переполнения
+	std::cout << (FixedPoint(-0.75) + FixedPoint(-1.50) == FixedPoint(-2.25)) << '\n'; // оба значения отрицательные, переполнение
+	std::cout << (FixedPoint(0.75) + FixedPoint(-1.23) == FixedPoint(-0.48)) << '\n'; // второе значение отрицательное, никакого переполнения
+	std::cout << (FixedPoint(0.75) + FixedPoint(-1.50) == FixedPoint(-0.75)) << '\n'; // второе значение отрицательное, возможно переполнение
+	std::cout << (FixedPoint(-0.75) + FixedPoint(1.23) == FixedPoint(0.48)) << '\n'; // первое значение отрицательное, никакого переполнения
+	std::cout << (FixedPoint(-0.75) + FixedPoint(1.50) == FixedPoint(0.75)) << '\n'; // первое значение отрицательное, возможно переполнение
+}
+int main()
+{
+	//Задание 4
+	SomeTest();
+	FixedPoint a3(-0.48);
+	std::cout << a3 << '\n';
+
+	std::cout << -a3 << '\n';
+
+	std::cout << "Enter a number: "; // введите 5.678
+	std::cin >> a3;
+
+	std::cout << "You entered: " << a3 << '\n';
+
+	FixedPoint a2(0.03);
+	std::cout << a2 << '\n';
+
+	FixedPoint b2(-0.03);
+	std::cout << b2 << '\n';
+
+	FixedPoint c2(4.01); // сохранится, как 4.0099999..., поэтому нам нужно это всё округлить
+	std::cout << c2 << '\n';
+
+	FixedPoint d2(-4.01); // сохранится, как -4.0099999..., поэтому нам нужно это всё округлить
+	std::cout << d2 << '\n';
+
+	FixedPoint a1(37, 58);
+	std::cout << a1 << '\n';
+
+	FixedPoint b1(-3, 9);
+	std::cout << b1 << '\n';
+
+	FixedPoint c1(4, -7);
+	std::cout << c1 << '\n';
+
+	FixedPoint d1(-5, -7);
+	std::cout << d1 << '\n';
+
+	FixedPoint e1(0, -3);
+	std::cout << e1 << '\n';
+
+	std::cout << static_cast<double>(e1) << '\n';
+
+	return 0;
+
+	//задание 3
+	IntArray a = fillArray();
+	std::cout << a << '\n';
+	IntArray b(1);
+	a = a;
+	b = a;
+	std::cout << b << '\n';
+	return 0;
+
+	//задание 2
+	Average avg;
+	avg += 5;
+	std::cout << avg << '\n'; // 5 / 1 = 5
+	avg += 9;
+	std::cout << avg << '\n'; // (5 + 9) / 2 = 7
+	avg += 19;
+	std::cout << avg << '\n'; // (5 + 9 + 19) / 3 = 11
+	avg += -9;
+	std::cout << avg << '\n'; // (5 + 9 + 19 - 9) / 4 = 6
+	(avg += 7) += 11; // выполнение цепочки операций
+	std::cout << avg << '\n'; // (5 + 9 + 19 - 9 + 7 + 11) / 6 = 7
+	Average copy = avg;
+	std::cout << copy << '\n';
+	return 0;
+}
+#endif
+
+#ifdef Поверхностное_копирование
+#include <cassert> // для assert()
+
+class SomeString
+{
+private:
+	char* m_data;
+	int m_length;
+
+public:
+	SomeString(const char* source = "")
+	{
+		assert(source); // проверяем не является ли source нулевой строкой
+
+		// Определяем длину source + еще один символ для нуль-терминатора (символ завершения строки)
+		m_length = strlen(source) + 1;
+
+		// Выделяем достаточно памяти для хранения копируемого значения в соответствии с длиной этого значения
+		m_data = new char[m_length];
+
+		// Копируем значение по символам в нашу выделенную память
+		for (int i = 0; i < m_length; ++i)
+			m_data[i] = source[i];
+
+		// Убеждаемся, что строка завершена
+		m_data[m_length - 1] = '\0';
+	}
+	SomeString(const SomeString& source);
+	SomeString& operator=(const SomeString& source);
+	~SomeString() // деструктор
+	{
+		// Освобождаем память, выделенную для нашей строки
+		delete[] m_data;
+	}
+
+
+	char* getString() { return m_data; }
+	int getLength() { return m_length; }
+};
+	// Оператор присваивания
+	SomeString& SomeString::operator=(const SomeString& source)
+	{
+		// Проверка на самоприсваивание
+		if (this == &source)
+			return *this;
+
+		// Сначала нам нужно очистить предыдущее значение m_data (члена неявного объекта)
+		delete[] m_data;
+
+		// Поскольку m_length не является указателем, то мы можем выполнить поверхностное копирование
+		m_length = source.m_length;
+
+		// m_data является указателем, поэтому нам нужно выполнить глубокое копирование, при условии, что этот указатель не является нулевым
+		if (source.m_data)
+		{
+			// Выделяем память для нашей копии
+			m_data = new char[m_length];
+
+			// Выполняем копирование
+			for (int i = 0; i < m_length; ++i)
+				m_data[i] = source.m_data[i];
+		}
+		else
+			m_data = 0;
+
+		return *this;
+	}
+// Конструктор копирования
+SomeString::SomeString(const SomeString& source)
+{
+	// Поскольку m_length не является указателем, то мы можем выполнить поверхностное копирование
+	m_length = source.m_length;
+
+	// m_data является указателем, поэтому нам нужно выполнить глубокое копирование, при условии, что этот указатель не является нулевым
+	if (source.m_data)
+	{
+		// Выделяем память для нашей копии
+		m_data = new char[m_length];
+
+		// Выполняем копирование
+		for (int i = 0; i < m_length; ++i)
+			m_data[i] = source.m_data[i];
+	}
+	else
+		m_data = 0;
+}
+int main()
+{
+	SomeString hello("Hello, world!");
+	{
+		SomeString copy = hello; // используется конструктор копирования по умолчанию
+	} // объект copy является локальной переменной, которая уничтожается здесь. Деструктор удаляет значение-строку объекта copy, оставляя, таким образом, hello с висячим указателем
+
+	std::cout << hello.getString() << '\n'; // здесь неопределенные результаты
+
+	return 0;
+}
+#endif
+
+#ifdef Перегрузка_оператора_присваивания
+#include <cassert>
+class Drob
+{
+private:
+	int m_numerator;
+	int m_denominator;
+
+public:
+	// Конструктор по умолчанию
+	Drob(int numerator = 0, int denominator = 1) :
+		m_numerator(numerator), m_denominator(denominator)
+	{
+		assert(denominator != 0);
+	}
+
+	// Конструктор копирования
+	Drob(const Drob& copy) = delete;
+
+	// Перегрузка оператора присваивания
+	Drob& operator= (const Drob& drob) = delete; // нет созданию копий объектов через операцию присваивания!
+
+	friend std::ostream& operator<<(std::ostream& out, const Drob& d1);
+
+};
+
+std::ostream& operator<<(std::ostream& out, const Drob& d1)
+{
+	out << d1.m_numerator << "/" << d1.m_denominator;
+	return out;
+}
+
+int main()
+{
+	Drob sixSeven(6, 7);
+	Drob d;
+	d = sixSeven; // ошибка компиляции, operator= был удален
+	std::cout << d;
+
+	return 0;
+}
+#endif
 
 #ifdef Конструкторы_преобразования ключевые слова explicit и delete
 #include <cassert>
