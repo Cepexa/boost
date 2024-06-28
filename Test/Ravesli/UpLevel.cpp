@@ -3,8 +3,6 @@
 
 #ifdef Итоговый_тест
 
-
-
 class Average
 {
 public:
