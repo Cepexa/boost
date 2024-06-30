@@ -26,7 +26,6 @@ int main1()
 #include <chrono> // для функций из std::chrono
 #include <iostream>
 #include <array>
-#include <chrono> // для функций из std::chrono
 #include <algorithm> // для std::sort()
 
 const int g_arrayElements = 10000; // общее количество всех элементов массива

@@ -1,8 +1,175 @@
 #include <iostream>
 #include <thread>
+#include <mutex>
 #include <chrono>
 using namespace std;
-#define Метод_Класса_в_потоке
+#define off
+
+#ifdef unique_lock_ лучше чем lock_guard
+mutex mtx;
+
+void Print(char ch) {
+	unique_lock<mutex> ul(mtx,defer_lock);
+	this_thread::sleep_for(chrono::milliseconds(200));
+	ul.lock();
+	for (size_t i = 0; i < 5; i++)
+	{
+		for (size_t i = 0; i < 10; i++)
+		{
+			cout << ch;
+			this_thread::sleep_for(chrono::milliseconds(20));
+		}
+		cout << endl;
+	}
+	cout << endl;
+	ul.unlock();
+	this_thread::sleep_for(chrono::milliseconds(200));
+}
+
+int main() {
+	system("chcp 1251 > nul");
+	thread t1(Print, '*');
+	thread t2(Print, '#');
+	t1.join();
+	t2.join();
+}
+#endif
+
+#ifdef Рекурсивная_блокировка
+recursive_mutex rm;
+void Foo(int a) {
+	rm.lock();
+	cout << a << " ";
+	this_thread::sleep_for(chrono::milliseconds(200));
+	if (a<=1)
+	{
+		cout << endl;
+		rm.unlock();
+		return;
+	}
+	a--;
+	Foo(a);
+	rm.unlock();
+}
+int main() {
+	system("chcp 1251 > nul");
+	thread t1(Foo, 10);
+	thread t2(Foo, 10);
+	t1.join();
+	t2.join();
+}
+#endif
+
+#ifdef DeadLock
+mutex mtx1;
+mutex mtx2;
+
+void Print(char ch) {
+	mtx2.lock();
+	this_thread::sleep_for(chrono::milliseconds(200));
+	mtx1.lock();
+	for (size_t i = 0; i < 5; i++)
+	{
+		for (size_t i = 0; i < 10; i++)
+		{
+			cout << ch;
+			this_thread::sleep_for(chrono::milliseconds(20));
+		}
+		cout << endl;
+	}
+	cout << endl;
+	mtx1.unlock();
+	mtx2.unlock();
+}
+void Print2(char ch) {
+	mtx1.lock();//важен порядок 
+	this_thread::sleep_for(chrono::milliseconds(200));
+	mtx2.lock();
+	for (size_t i = 0; i < 5; i++)
+	{
+		for (size_t i = 0; i < 10; i++)
+		{
+			cout << ch;
+			this_thread::sleep_for(chrono::milliseconds(20));
+		}
+		cout << endl;
+	}
+	cout << endl;
+	mtx2.unlock();
+	mtx1.unlock();
+}
+
+int main() {
+	system("chcp 1251 > nul");
+	thread t1(Print, '*');
+	thread t2(Print2, '#');
+	t1.join();
+	t2.join();
+}
+#endif
+
+#ifdef Lock_guard
+mutex mtx;
+
+void Print(char ch) {
+	this_thread::sleep_for(chrono::milliseconds(200));
+	{
+		lock_guard<mutex> guard(mtx);
+		for (size_t i = 0; i < 5; i++)
+		{
+			for (size_t i = 0; i < 10; i++)
+			{
+				cout << ch;
+				this_thread::sleep_for(chrono::milliseconds(20));
+			}
+			cout << endl;
+		}
+		cout << endl;
+	}
+	this_thread::sleep_for(chrono::milliseconds(200));
+}
+
+int main() {
+	system("chcp 1251 > nul");
+	thread t1(Print, '*');
+	thread t2(Print, '#');
+	t1.join();
+	t2.join();
+}
+#endif
+
+#ifdef Защита_и_Синхронизация
+mutex mtx;
+
+void Print(char ch) {
+	this_thread::sleep_for(chrono::milliseconds(200));
+	/// 
+	/// блокируем для других потоков
+	/// 
+	/// 
+	mtx.lock();
+	for (size_t i = 0; i < 5; i++)
+	{
+		for (size_t i = 0; i < 10; i++)
+		{
+			cout << ch;
+			this_thread::sleep_for(chrono::milliseconds(20));
+		}
+		cout << endl;
+	}
+	cout << endl;
+	mtx.unlock();	/// убираем блок для других потоков
+	this_thread::sleep_for(chrono::milliseconds(200));
+}
+
+int main() {
+	system("chcp 1251 > nul");
+	thread t1(Print, '*');
+	thread t2(Print, '#');
+	t1.join();
+	t2.join();
+}
+#endif
 
 #ifdef Метод_Класса_в_потоке
 class MyClass
